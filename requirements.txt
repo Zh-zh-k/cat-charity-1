@@ -56,7 +56,7 @@ pyparsing
 pytest==8.4.2
 pytest-asyncio==1.2.0
 pytest-freezer
-pytest-lazy-fixture
+pytest-lazy-fixtures
 pytest-pythonpath
 python-dateutil
 python-dotenv
