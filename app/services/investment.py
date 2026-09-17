@@ -12,7 +12,7 @@ def close_invested_object(obj: InvestmentBase) -> None:
 def invest(
     target: InvestmentBase,
     sources: list[InvestmentBase],
-) -> InvestmentBase:
+) -> tuple[InvestmentBase, list[InvestmentBase]]:
     for source in sources:
         target_free = target.full_amount - target.invested_amount
         source_free = source.full_amount - source.invested_amount
@@ -28,4 +28,4 @@ def invest(
         if target.fully_invested:
             break
 
-    return target
+    return target, sources

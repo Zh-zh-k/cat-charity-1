@@ -2,11 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
-from app.core.constants import (
-    MAX_LEN_NAME,
-    MIN_LEN_NAME,
-    MIN_LEN_DESCRIPTION
-)
+from app.core.constants import MAX_LEN_NAME, MIN_LEN_DESCRIPTION, MIN_LEN_NAME
 
 
 class CharityProjectBase(BaseModel):

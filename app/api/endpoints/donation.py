@@ -6,11 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
 from app.crud.donation import donation_crud
-from app.schemas.donation import (
-    DonationCreate,
-    DonationDB,
-    DonationFullInfoDB,
-)
+from app.schemas.donation import DonationCreate, DonationDB, DonationFullInfoDB
 from app.services.investment import invest
 
 router = APIRouter()
@@ -50,7 +46,7 @@ async def create_donation(
     )
 
     projects = await charity_project_crud.get_not_fully_invested(session)
-    invest(donation, projects)
+    donation, projects = invest(donation, projects)
     session.add_all(projects)
 
     await session.commit()

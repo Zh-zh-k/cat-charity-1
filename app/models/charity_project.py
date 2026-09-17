@@ -1,8 +1,8 @@
 from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import InvestmentBase
 from app.core.constants import MAX_LEN_NAME
+from app.models.base import InvestmentBase
 
 
 class CharityProject(InvestmentBase):
