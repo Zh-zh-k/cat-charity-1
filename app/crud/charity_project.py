@@ -1,12 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud.base import CRUDBase
 from app.models.charity_project import CharityProject
-from app.schemas.charity_project import (CharityProjectCreate,
-                                         CharityProjectUpdate)
+from app.schemas.charity_project import CharityProjectUpdate
 
 
-class CharityProjectCRUD:
+class CharityProjectCRUD(CRUDBase):
 
     async def get(
         self,
@@ -14,15 +14,6 @@ class CharityProjectCRUD:
         session: AsyncSession,
     ) -> CharityProject | None:
         return await session.get(CharityProject, project_id)
-
-    async def get_multi(
-        self,
-        session: AsyncSession,
-    ) -> list[CharityProject]:
-        result = await session.execute(
-            select(CharityProject).order_by(CharityProject.id)
-        )
-        return list(result.scalars().all())
 
     async def get_by_name(
         self,
@@ -33,16 +24,6 @@ class CharityProjectCRUD:
             select(CharityProject).where(CharityProject.name == name)
         )
         return result.scalars().first()
-
-    async def create(
-        self,
-        obj_in: CharityProjectCreate,
-        session: AsyncSession,
-    ) -> CharityProject:
-        db_obj = CharityProject(**obj_in.model_dump())
-        session.add(db_obj)
-        await session.flush()
-        return db_obj
 
     async def update(
         self,
@@ -66,16 +47,5 @@ class CharityProjectCRUD:
         await session.delete(db_obj)
         return db_obj
 
-    async def get_not_fully_invested(
-        self,
-        session: AsyncSession,
-    ) -> list[CharityProject]:
-        result = await session.execute(
-            select(CharityProject)
-            .where(CharityProject.fully_invested.is_(False))
-            .order_by(CharityProject.create_date)
-        )
-        return list(result.scalars().all())
 
-
-charity_project_crud = CharityProjectCRUD()
+charity_project_crud = CharityProjectCRUD(CharityProject)

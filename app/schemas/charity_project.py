@@ -2,10 +2,20 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, PositiveInt
 
+from app.core.constants import (
+    MAX_LEN_NAME,
+    MIN_LEN_NAME,
+    MIN_LEN_DESCRIPTION
+)
+
 
 class CharityProjectBase(BaseModel):
-    name: str = Field(..., min_length=5, max_length=100)
-    description: str = Field(..., min_length=10)
+    name: str = Field(
+        ...,
+        min_length=MIN_LEN_NAME,
+        max_length=MAX_LEN_NAME
+    )
+    description: str = Field(..., min_length=MIN_LEN_DESCRIPTION)
     full_amount: PositiveInt
 
     model_config = ConfigDict(extra='forbid')
@@ -16,8 +26,12 @@ class CharityProjectCreate(CharityProjectBase):
 
 
 class CharityProjectUpdate(BaseModel):
-    name: str | None = Field(None, min_length=5, max_length=100)
-    description: str | None = Field(None, min_length=10)
+    name: str | None = Field(
+        None,
+        min_length=MIN_LEN_NAME,
+        max_length=MAX_LEN_NAME
+    )
+    description: str | None = Field(None, min_length=MIN_LEN_DESCRIPTION)
     full_amount: PositiveInt | None = None
 
     model_config = ConfigDict(extra='forbid')

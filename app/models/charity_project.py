@@ -2,6 +2,7 @@ from sqlalchemy import String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import InvestmentBase
+from app.core.constants import MAX_LEN_NAME
 
 
 class CharityProject(InvestmentBase):
@@ -9,7 +10,7 @@ class CharityProject(InvestmentBase):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(
-        String(100),
+        String(MAX_LEN_NAME),
         unique=True,
         nullable=False,
     )

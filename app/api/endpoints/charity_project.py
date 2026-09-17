@@ -1,4 +1,5 @@
 from datetime import datetime
+from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,13 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import get_async_session
 from app.crud.charity_project import charity_project_crud
 from app.crud.donation import donation_crud
-from app.schemas.charity_project import (CharityProjectCreate,
-                                         CharityProjectDB,
-                                         CharityProjectUpdate)
+from app.schemas.charity_project import (
+    CharityProjectCreate,
+    CharityProjectDB,
+    CharityProjectUpdate,
+)
 from app.services.investment import invest
 
 router = APIRouter()
-
 
 SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 
@@ -26,6 +28,7 @@ SessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 async def get_all_charity_projects(
     session: SessionDep,
 ):
+    """Вернуть список всех благотворительных проектов."""
     return await charity_project_crud.get_multi(session)
 
 
@@ -38,13 +41,18 @@ async def create_charity_project(
     project_in: CharityProjectCreate,
     session: SessionDep,
 ):
+    """Создать новый благотворительный проект.
+
+    При наличии нераспределённых пожертвований средства автоматически
+    инвестируются в новый проект.
+    """
     project_exists = await charity_project_crud.get_by_name(
         project_in.name,
         session,
     )
     if project_exists:
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail='Проект с таким именем уже существует!',
         )
 
@@ -55,6 +63,7 @@ async def create_charity_project(
 
     donations = await donation_crud.get_not_fully_invested(session)
     invest(project, donations)
+    session.add_all(donations)
 
     await session.commit()
     await session.refresh(project)
@@ -72,6 +81,11 @@ async def update_charity_project(
     project_in: CharityProjectUpdate,
     session: SessionDep,
 ):
+    """Обновить существующий благотворительный проект.
+
+    Закрытые проекты редактировать нельзя. Новая требуемая сумма
+    не может быть меньше уже инвестированной.
+    """
     project = await charity_project_crud.get(
         project_id,
         session,
@@ -79,13 +93,13 @@ async def update_charity_project(
 
     if project is None:
         raise HTTPException(
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
             detail='Проект не найден!',
         )
 
     if project.fully_invested:
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail='Закрытый проект нельзя редактировать!',
         )
 
@@ -100,7 +114,7 @@ async def update_charity_project(
             and project_with_same_name.id != project.id
         ):
             raise HTTPException(
-                status_code=400,
+                status_code=HTTPStatus.BAD_REQUEST,
                 detail='Проект с таким именем уже существует!',
             )
 
@@ -109,7 +123,7 @@ async def update_charity_project(
         and project_in.full_amount < project.invested_amount
     ):
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail=(
                 'Нельзя установить значение full_amount '
                 'меньше уже вложенной суммы.'
@@ -141,6 +155,11 @@ async def delete_charity_project(
     project_id: int,
     session: SessionDep,
 ):
+    """Удалить благотворительный проект.
+
+    Проект нельзя удалить, если в него уже были инвестированы средства
+    или он полностью закрыт.
+    """
     project = await charity_project_crud.get(
         project_id,
         session,
@@ -148,13 +167,13 @@ async def delete_charity_project(
 
     if project is None:
         raise HTTPException(
-            status_code=404,
+            status_code=HTTPStatus.NOT_FOUND,
             detail='Проект не найден!',
         )
 
     if project.invested_amount > 0 or project.fully_invested:
         raise HTTPException(
-            status_code=400,
+            status_code=HTTPStatus.BAD_REQUEST,
             detail='В проект были внесены средства, не подлежит удалению!',
         )
 
